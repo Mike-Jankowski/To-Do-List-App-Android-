@@ -6,34 +6,47 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 
 class MainActivity : AppCompatActivity() {
+
+    // Definiujemy bazę danych i DAO jako zmienne klasowe
+    private lateinit var database: AppDatabase
+    private lateinit var taskDao: TaskDao
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // setContentView MUSI być przed szukaniem widoków
         setContentView(R.layout.activity_main)
 
-        // 1. Konfiguracja RecyclerView (Wymaganie nr 5)
+        // 1. Konfiguracja bazy danych Room
+        database = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "todo-db"
+        ).allowMainThreadQueries() // Uwaga: Tylko do celów projektowych, by uprościć kod
+            .build()
+
+        taskDao = database.taskDao()
+
+        // 2. Konfiguracja RecyclerView [cite: 21]
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewTasks)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Tymczasowe dane do testu (zanim podepniemy bazę danych Room)
-        val dummyTasks = listOf(
-            Task(title = "Zrobić projekt z mobilnych"),
-            Task(title = "Wysłać kod na Git"),
-            Task(title = "Dokończyć dokumentację")
-        )
+        // 3. Pobieranie PRAWDZIWYCH danych z bazy
+        val tasksFromDb = taskDao.getAll()
+        recyclerView.adapter = TaskAdapter(tasksFromDb)
 
-        // Ustawienie adaptera, który stworzyłeś wcześniej
-        recyclerView.adapter = TaskAdapter(dummyTasks)
-
-        // 2. Znajdujemy przycisk po ID z pliku XML (Wymaganie nr 2) [cite: 18]
+        // 4. Obsługa przycisku "+" (Nawigacja) [cite: 17, 18]
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAdd)
-
-        // 3. Obsługa kliknięcia - nawigacja (Wymaganie nr 1) [cite: 17, 18]
         fabAdd.setOnClickListener {
             val intent = Intent(this, AddTaskActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    // Odświeżanie listy po powrocie z ekranu dodawania
+    override fun onResume() {
+        super.onResume()
+        val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewTasks)
+        recyclerView.adapter = TaskAdapter(taskDao.getAll())
     }
 }

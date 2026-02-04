@@ -44,12 +44,16 @@ class MainActivity : AppCompatActivity() {
     // Wyodrębniona funkcja do odświeżania listy (unikanie powtórzeń kodu)
     private fun refreshTaskList() {
         val tasks = taskDao.getAll()
-        recyclerView.adapter = TaskAdapter(tasks) { task ->
-            // Logika usuwania z bazy danych po kliknięciu kosza
-            taskDao.delete(task)
-            // Ponowne odświeżenie widoku po usunięciu
-            refreshTaskList()
-        }
+        recyclerView.adapter = TaskAdapter(
+            tasks,
+            { task ->
+                taskDao.delete(task)
+                refreshTaskList()
+            },
+            { updatedTask ->
+                taskDao.update(updatedTask)
+            }
+        )
     }
 
     override fun onResume() {

@@ -12,7 +12,8 @@ import androidx.recyclerview.widget.RecyclerView
 // Dodaliśmy onDeleteClick, aby MainActivity wiedziało, kiedy usunąć zadanie
 class TaskAdapter(
     private val tasks: List<Task>,
-    private val onDeleteClick: (Task) -> Unit
+    private val onDeleteClick: (Task) -> Unit,
+    private val onStatusChange: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -47,6 +48,10 @@ class TaskAdapter(
         // Obsługa zmiany statusu (opcjonalne wizualnie)
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
             updateTaskView(isChecked)
+
+            // Zaaktualizowana kopia Taska ze zmienionym statusem > wysyłana do bazy
+            val updatedTask = task.copy(isDone = isChecked)
+            onStatusChange(updatedTask)
         }
     } // <-- Tutaj brakowało domknięcia onBindViewHolder!
 

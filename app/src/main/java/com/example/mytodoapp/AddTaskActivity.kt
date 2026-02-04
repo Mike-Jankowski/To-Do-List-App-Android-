@@ -33,12 +33,35 @@ class AddTaskActivity : AppCompatActivity() {
 
                 Toast.makeText(this, "Zapisano w bazie!", Toast.LENGTH_SHORT).show()
 
-                // Zamyka ten ekran i wraca do poprzedniego (MainActivity) [cite: 17]
+                val builder = androidx.core.app.NotificationCompat.Builder(this, "TODO_CHANNEL")
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle("Sukces!")
+                    .setContentText("Dodano zadanie: $taskName")
+                    .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+
+                with(androidx.core.app.NotificationManagerCompat.from(this)) {
+                    notify(1, builder.build())
+                }
+
                 finish()
             } else {
                 // Walidacja - nie pozwalamy zapisać pustego zadania
                 editTextTaskName.error = "Wpisz nazwę zadania!"
             }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val name = "TodoNotifications"
+            val descriptionText = "Powiadomienia o zadaniach"
+            val importance = android.app.NotificationManager.IMPORTANCE_DEFAULT
+            val channel = android.app.NotificationChannel("TODO_CHANNEL", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: android.app.NotificationManager =
+                getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
 }

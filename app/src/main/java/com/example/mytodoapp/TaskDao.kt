@@ -8,4 +8,7 @@ interface TaskDao {
 
     @Query("SELECT * FROM tasks")
     fun getAll(): List<Task>
+
+    @Delete
+    fun delete(task: Task)
 }

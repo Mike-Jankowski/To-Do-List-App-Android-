@@ -10,9 +10,9 @@ import androidx.room.Room
 
 class MainActivity : AppCompatActivity() {
 
-    // Definiujemy bazę danych i DAO jako zmienne klasowe
     private lateinit var database: AppDatabase
     private lateinit var taskDao: TaskDao
+    private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,20 +22,18 @@ class MainActivity : AppCompatActivity() {
         database = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java, "todo-db"
-        ).allowMainThreadQueries() // Uwaga: Tylko do celów projektowych, by uprościć kod
-            .build()
+        ).allowMainThreadQueries().build()
 
         taskDao = database.taskDao()
 
-        // 2. Konfiguracja RecyclerView [cite: 21]
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewTasks)
+        // 2. Konfiguracja RecyclerView
+        recyclerView = findViewById(R.id.recyclerViewTasks)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // 3. Pobieranie PRAWDZIWYCH danych z bazy
-        val tasksFromDb = taskDao.getAll()
-        recyclerView.adapter = TaskAdapter(tasksFromDb)
+        // 3. Ładowanie danych i ustawienie adaptera z logiką usuwania
+        refreshTaskList()
 
-        // 4. Obsługa przycisku "+" (Nawigacja) [cite: 17, 18]
+        // 4. Obsługa przycisku "+"
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabAdd)
         fabAdd.setOnClickListener {
             val intent = Intent(this, AddTaskActivity::class.java)
@@ -43,10 +41,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Odświeżanie listy po powrocie z ekranu dodawania
+    // Wyodrębniona funkcja do odświeżania listy (unikanie powtórzeń kodu)
+    private fun refreshTaskList() {
+        val tasks = taskDao.getAll()
+        recyclerView.adapter = TaskAdapter(tasks) { task ->
+            // Logika usuwania z bazy danych po kliknięciu kosza
+            taskDao.delete(task)
+            // Ponowne odświeżenie widoku po usunięciu
+            refreshTaskList()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewTasks)
-        recyclerView.adapter = TaskAdapter(taskDao.getAll())
+        // Odświeżamy listę przy każdym powrocie do ekranu głównego
+        refreshTaskList()
     }
 }

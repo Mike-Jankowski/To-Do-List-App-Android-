@@ -30,6 +30,7 @@ class AddTaskActivity : AppCompatActivity() {
                 // TWORZYMY OBIEKT ZADANIA I ZAPISUJEMY W BAZIE
                 val newTask = Task(title = taskName)
                 database.taskDao().insert(newTask)
+                android.util.Log.i("ToDoApp_Log", "Dodano nowe zadanie do bazy danych")
 
                 Toast.makeText(this, "Zapisano w bazie!", Toast.LENGTH_SHORT).show()
 
